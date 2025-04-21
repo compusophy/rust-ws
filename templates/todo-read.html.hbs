@@ -1,0 +1,47 @@
+<div class="card mb-3" id="todo_{{todo.id}}">
+    <div class="card-body">
+        <div class="card-text p-1">
+            <div class="d-flex justify-content-between align-items-center">
+                {{#if edit_mode}}
+                    <!-- Edit mode -->
+                    <div class="flex-grow-1">
+                        <div class="input-group">
+                            <input 
+                                id="todo_edit_{{todo.id}}" 
+                                type="text" 
+                                class="form-control"
+                                value="{{todo.title}}"
+                                autofocus
+                                data-todo-id="{{todo.id}}"
+                                data-original-value="{{todo.title}}"
+                                oninput="sendEditUpdate(this)"
+                            >
+                            <button 
+                                onclick="toggleEditMode({{todo.id}}, false)" 
+                                class="btn btn-light"
+                                title="Done"
+                            ><i class="bi bi-check"></i></button>
+                        </div>
+                    </div>
+                {{else}}
+                    <!-- View mode -->
+                    <div class="flex-grow-1">
+                        <span class="text-break" id="todo_content_{{todo.id}}">{{ todo.title }}</span>
+                    </div>
+                    <div class="btn-group">
+                        <button 
+                            onclick="toggleEditMode({{todo.id}}, true)"
+                            class="btn btn-light btn-sm"
+                        ><i class="bi bi-pencil"></i></button>
+                        <button 
+                            hx-post="/todo-delete/{{ todo.id }}"
+                            hx-target="#todo_{{ todo.id }}"
+                            hx-swap="outerHTML"
+                            class="btn btn-light btn-sm text-danger"
+                        ><i class="bi bi-trash"></i></button>
+                    </div>
+                {{/if}}
+            </div>
+        </div>
+    </div>
+</div>

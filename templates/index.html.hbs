@@ -1,0 +1,889 @@
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>TODO</title>
+    
+    <!-- Farcaster Frame Meta Tags -->
+    <meta name="fc:frame" content='{"version":"next","imageUrl":"https://cqs.gg/icon.jpg","button":{"title":"launch","action":{"type":"launch_frame","name":"TODO","url":"https://htmx-rust-gemini-production.up.railway.app","splashImageUrl":"https://cqs.gg/icon.jpg","splashBackgroundColor":"#ffffff"}}}' />
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap"
+          rel="stylesheet">
+    <style>
+        body {
+            font-family: "Libre Baskerville", serif;
+        }
+
+        footer {
+            font-family: sans-serif;
+        }
+
+        h1 {
+            font-weight: 700;
+        }
+        
+        .todo-container {
+            max-width: 540px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+        
+        @media (max-width: 576px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s;
+        }
+        
+        .highlight {
+            animation: highlight 1.5s;
+        }
+        
+        @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+        
+        @keyframes highlight {
+            0% { background-color: transparent; }
+            30% { background-color: rgba(255, 249, 196, 0.7); }
+            100% { background-color: transparent; }
+        }
+        
+        .ws-status {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.7);
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            font-family: monospace;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .log-button {
+            background: none;
+            border: 1px solid #333;
+            color: #555;
+            font-family: monospace;
+            font-size: 14px;
+            padding: 2px 6px;
+            cursor: pointer;
+            border-radius: 3px;
+            margin-right: 10px;
+            transition: all 0.2s;
+        }
+        
+        .log-button-container {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            z-index: 100;
+            background: rgba(255,255,255,0.7);
+            padding: 4px;
+            border-radius: 3px;
+        }
+        
+        .log-button:hover {
+            color: #000;
+            border-color: #000;
+        }
+        
+        .event-log-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.85);
+        }
+        
+        .event-log-modal-content {
+            background-color: #0a0a0a;
+            color: #33ff33;
+            margin: 5% auto;
+            width: 80%;
+            max-width: 800px;
+            border: 1px solid #333;
+            border-radius: 4px;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.2);
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .event-log-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 10px;
+            background-color: #0a0a0a;
+            border-bottom: 1px solid #333;
+        }
+        
+        .event-log-title {
+            font-size: 16px;
+            color: #33ff33;
+            line-height: 1;
+        }
+        
+        .event-log-close {
+            color: #666;
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 0 5px;
+        }
+        
+        .event-log-close:hover {
+            color: #33ff33;
+        }
+        
+        .event-log {
+            padding: 10px;
+            overflow-y: auto;
+            flex: 1;
+            background-color: #0a0a0a;
+        }
+        
+        .event-log-item {
+            font-size: 13px;
+            line-height: 1.2;
+            margin: 0;
+            padding: 1px 0;
+            white-space: pre-wrap;
+            word-break: break-word;
+            color: #aaa;
+            display: flex;
+            align-items: baseline;
+        }
+        
+        .event-log-timestamp {
+            color: #666;
+            margin-right: 5px;
+            flex-shrink: 0;
+        }
+        
+        .event-log-type {
+            margin: 0 5px;
+            flex-shrink: 0;
+        }
+        
+        .event-log-type-add {
+            color: #33ff33;
+        }
+        
+        .event-log-type-update {
+            color: #3399ff;
+        }
+        
+        .event-log-type-delete {
+            color: #ff3333;
+        }
+        
+        .event-log-type-edit {
+            color: #ffcc00;
+        }
+        
+        .event-log-type-connection {
+            color: #cc99ff;
+        }
+        
+        .event-log-type-error {
+            color: #ff6600;
+        }
+        
+        .event-log-message {
+            color: #ddd;
+            flex-grow: 1;
+        }
+        
+        /* Custom scrollbar for the event log */
+        .event-log::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .event-log::-webkit-scrollbar-track {
+            background: #111;
+        }
+        
+        .event-log::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 4px;
+        }
+        
+        .event-log::-webkit-scrollbar-thumb:hover {
+            background: #444;
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: red;
+        }
+        
+        .status-dot.connected {
+            background-color: #4CAF50;
+        }
+        
+        .editing-indicator {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: #ff5722;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(0.95); opacity: 0.7; }
+            50% { transform: scale(1.05); opacity: 1; }
+            100% { transform: scale(0.95); opacity: 0.7; }
+        }
+    </style>
+    
+    <!-- Farcaster Frame SDK -->
+    <script type="module">
+      // Import the SDK
+      import { sdk } from 'https://esm.sh/@farcaster/frame-sdk';
+      
+      // Function to initialize the SDK and hide splash screen
+      async function initFarcaster() {
+        try {
+          console.log("Farcaster: Initializing SDK");
+          
+          // Function to hide the splash screen
+          const hideSplashScreen = async () => {
+            try {
+              await sdk.actions.ready();
+              console.log("Farcaster: Splash screen dismissed");
+            } catch (err) {
+              console.error("Farcaster: Error dismissing splash screen:", err);
+            }
+          };
+          
+          // Listen for the app-ready event from the WebSocket
+          document.addEventListener('app-ready', hideSplashScreen);
+          
+          // Set a timeout as fallback in case WebSocket doesn't connect
+          setTimeout(async () => {
+            if (!window.wsConnected) {
+              console.log("Farcaster: Timeout reached, showing app anyway");
+              hideSplashScreen();
+            }
+          }, 3000);
+        } catch (err) {
+          console.error("Farcaster: SDK initialization error:", err);
+        }
+      }
+      
+      // Wait for DOM to be fully loaded
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initFarcaster);
+      } else {
+        initFarcaster();
+      }
+    </script>
+</head>
+<body>
+<!-- Add the log button in its own container at the top level of the body -->
+<div class="log-button-container">
+    <button id="logButton" class="log-button" title="View Event Log">
+        >_
+    </button>
+</div>
+
+<div class="container mt-4">
+    <div class="todo-container">
+        <div class="d-flex align-items-center justify-content-center mb-4">
+            <!-- Remove the log button from here -->
+            <h1 class="text-center mb-0">TODO</h1>
+        </div>
+        
+        <form id="addTodoForm">
+            <div>
+                <input id="addTodoInput" autocomplete="off" class="form-control"
+                       autofocus
+                       type="text" name="title" required minlength="1" maxlength="1024"
+                       placeholder="What needs to be done?">
+            </div>
+        </form>
+
+        <!-- Main todo list -->
+        <div id="todo-cards" class="mb-4">
+            {{> todo-cards todos=todos }}
+        </div>
+    </div>
+</div>
+
+<!-- WebSocket status indicator -->
+<div class="ws-status" id="ws-status">
+    <span class="status-dot" id="status-indicator"></span>
+    <span id="user-count">Connecting...</span>
+</div>
+
+<!-- Event Log Modal -->
+<div id="eventLogModal" class="event-log-modal">
+    <div class="event-log-modal-content">
+        <div class="event-log-header">
+            <h5 class="event-log-title my-0 d-flex align-items-center">Event Log</h5>
+            <button id="closeLogButton" class="event-log-close">&times;</button>
+        </div>
+        <div id="eventLog" class="event-log"></div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/htmx.org@2.0.0/dist/htmx.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+        crossorigin="anonymous"></script>
+
+<!-- WebSocket for real-time updates -->
+<script>
+    // Event Log functionality
+    const eventLog = document.getElementById('eventLog');
+    const logButton = document.getElementById('logButton');
+    const eventLogModal = document.getElementById('eventLogModal');
+    const closeLogButton = document.getElementById('closeLogButton');
+    
+    // Max number of events to keep in log
+    const MAX_LOG_ENTRIES = 100;
+    
+    // Show/hide modal
+    logButton.addEventListener('click', () => {
+        eventLogModal.style.display = 'block';
+    });
+    
+    closeLogButton.addEventListener('click', () => {
+        eventLogModal.style.display = 'none';
+    });
+    
+    // Close modal when clicking outside
+    window.addEventListener('click', (e) => {
+        if (e.target === eventLogModal) {
+            eventLogModal.style.display = 'none';
+        }
+    });
+    
+    // Escape key to close
+    window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && eventLogModal.style.display === 'block') {
+            eventLogModal.style.display = 'none';
+        }
+    });
+    
+    // Function to add an event to the log
+    function logEvent(type, message, data) {
+        const timestamp = new Date().toISOString().substr(11, 8);
+        const eventItem = document.createElement('div');
+        eventItem.className = 'event-log-item';
+        
+        let typeClass = '';
+        switch (type) {
+            case 'add': typeClass = 'event-log-type-add'; break;
+            case 'update': typeClass = 'event-log-type-update'; break;
+            case 'delete': typeClass = 'event-log-type-delete'; break;
+            case 'edit': 
+            case 'edit_update': 
+            case 'edit_saved': typeClass = 'event-log-type-edit'; break;
+            case 'connection': typeClass = 'event-log-type-connection'; break;
+            case 'error': typeClass = 'event-log-type-error'; break;
+            default: typeClass = '';
+        }
+        
+        eventItem.innerHTML = `<span class="event-log-timestamp">[${timestamp}]</span><span class="event-log-type ${typeClass}">${type}</span><span class="event-log-message">${message}</span>`;
+        
+        // Add to the beginning for newest-first order
+        eventLog.insertBefore(eventItem, eventLog.firstChild);
+        
+        // If there are more than 500 items, start removing old ones for performance
+        if (eventLog.children.length > MAX_LOG_ENTRIES) {
+            eventLog.removeChild(eventLog.lastChild);
+        }
+    }
+    
+    // Track who's currently editing which todo
+    const activeEditors = new Map();
+    let editDebounceTimers = {};
+    // Track our client ID for comparison
+    let myClientId = null;
+    // Flag to indicate WebSocket connection status - make it global for Farcaster SDK access
+    window.wsConnected = false;
+    
+    // Signal Farcaster SDK that the app is ready
+    function signalAppReady() {
+        // Dispatch a custom event that the Farcaster SDK can listen for
+        document.dispatchEvent(new CustomEvent('app-ready'));
+    }
+    
+    // Handle form submission manually
+    document.getElementById('addTodoForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+        
+        const title = document.getElementById('addTodoInput').value.trim();
+        if (title) {
+            // Clear the input field
+            document.getElementById('addTodoInput').value = '';
+            document.getElementById('addTodoInput').focus();
+            
+            // Log the add event
+            logEvent('add', `Creating new todo: "${title}"`);
+            
+            // Send the todo to the server via fetch
+            fetch('/todos', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `title=${encodeURIComponent(title)}`
+            });
+        }
+    });
+    
+    // Toggle between edit and view mode
+    function toggleEditMode(todoId, enterEditMode) {
+        const todoElement = document.getElementById(`todo_${todoId}`);
+        
+        if (enterEditMode) {
+            const todoContent = document.getElementById(`todo_content_${todoId}`).textContent;
+            logEvent('edit', `Started editing todo #${todoId}: "${todoContent}"`);
+            
+            // Fetch the edit version of the todo
+            fetch(`/todo-edit/${todoId}`)
+                .then(response => response.text())
+                .then(html => {
+                    // Store current content to use for initial edit
+                    const currentContent = document.getElementById(`todo_content_${todoId}`).textContent;
+                    
+                    todoElement.outerHTML = html;
+                    // Focus the input element
+                    const inputElement = document.getElementById(`todo_edit_${todoId}`);
+                    if (inputElement) {
+                        // Use the most up-to-date content
+                        inputElement.value = currentContent;
+                        inputElement.focus();
+                        inputElement.selectionStart = inputElement.value.length;
+                        
+                        // Set up input handler with direct DOM updates
+                        inputElement.addEventListener('input', function(e) {
+                            // Immediately update the display for smoother UX
+                            const contentElement = document.getElementById(`todo_content_${todoId}`);
+                            if (contentElement) {
+                                contentElement.textContent = e.target.value;
+                            }
+                            
+                            // Then send the update to others (debounced)
+                            sendEditUpdate(e.target);
+                        });
+                        
+                        // Trigger an immediate update to notify others
+                        sendEditUpdate(inputElement);
+                    }
+                    
+                    // Process with HTMX
+                    htmx.process(document.getElementById(`todo_${todoId}`));
+                });
+        } else {
+            // Get the current value from the input
+            const inputElement = document.getElementById(`todo_edit_${todoId}`);
+            const newContent = inputElement.value;
+            
+            logEvent('update', `Saving todo #${todoId}: "${newContent}"`);
+            
+            // Save the edit
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify({
+                    event: 'save_edit',
+                    todo_id: todoId,
+                    content: newContent,
+                    client_id: myClientId
+                }));
+            }
+            
+            // Switch back to view mode
+            fetch(`/todo-read/${todoId}`)
+                .then(response => response.text())
+                .then(html => {
+                    todoElement.outerHTML = html;
+                    
+                    // Immediately update text content with latest value
+                    const contentElement = document.getElementById(`todo_content_${todoId}`);
+                    if (contentElement) {
+                        contentElement.textContent = newContent;
+                    }
+                    
+                    // Process with HTMX
+                    htmx.process(document.getElementById(`todo_${todoId}`));
+                    
+                    // Remove any editing indicators
+                    const indicator = document.getElementById(`editing_indicator_${todoId}`);
+                    if (indicator) {
+                        indicator.remove();
+                    }
+                });
+        }
+    }
+    
+    // Send edit updates in real-time to other clients
+    function sendEditUpdate(inputElement) {
+        const todoId = inputElement.getAttribute('data-todo-id');
+        const content = inputElement.value;
+        
+        // Store as last known content from this user
+        if (!window.userLastContent) window.userLastContent = {};
+        window.userLastContent[todoId] = content;
+        
+        // Clear any previous debounce timer
+        if (editDebounceTimers[todoId]) {
+            clearTimeout(editDebounceTimers[todoId]);
+        }
+        
+        // Debounce sending updates (only send after 100ms of inactivity)
+        editDebounceTimers[todoId] = setTimeout(() => {
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify({
+                    event: 'edit_update',
+                    todo_id: parseInt(todoId),
+                    content: content,
+                    client_id: myClientId  // Include client ID for identification
+                }));
+            }
+        }, 50); // Reduce debounce time for more responsive updates
+    }
+    
+    // Get client ID from cookie
+    function getClientId() {
+        const matches = document.cookie.match(/client_id=([^;]+)/);
+        return matches ? matches[1] : null;
+    }
+    
+    // Update editing indicators
+    function updateEditingIndicator(todoId, editorId) {
+        const todoElement = document.getElementById(`todo_${todoId}`);
+        if (!todoElement) return;
+        
+        // Remove existing indicator
+        const existingIndicator = document.getElementById(`editing_indicator_${todoId}`);
+        if (existingIndicator) {
+            existingIndicator.remove();
+        }
+        
+        // Don't show indicator for our own edits
+        if (editorId !== myClientId && editorId) {
+            const indicator = document.createElement('div');
+            indicator.id = `editing_indicator_${todoId}`;
+            indicator.className = 'editing-indicator';
+            indicator.innerHTML = '<i class="bi bi-pencil-fill"></i>';
+            indicator.title = 'Someone is editing this todo';
+            todoElement.style.position = 'relative';
+            todoElement.appendChild(indicator);
+            
+            // Auto-remove after 5 seconds of no updates
+            setTimeout(() => {
+                const indicator = document.getElementById(`editing_indicator_${todoId}`);
+                if (indicator) {
+                    indicator.remove();
+                }
+            }, 5000);
+        }
+    }
+    
+    // WebSocket connection for real-time updates
+    let socket;
+    let reconnectAttempts = 0;
+    const maxReconnectAttempts = 5;
+    
+    // Initialize user count
+    let connectedUsers = 0;
+    
+    // Update user count display
+    function updateUserCount(count) {
+        const userCountElement = document.getElementById('user-count');
+        if (userCountElement) {
+            userCountElement.textContent = `${count} Online`;
+        }
+    }
+    
+    function connectWebSocket() {
+        // Close existing connection if any
+        if (socket) {
+            socket.close();
+        }
+        
+        // Create new WebSocket connection
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        socket = new WebSocket(`${protocol}//${window.location.host}/todo-ws`);
+        
+        socket.onopen = function() {
+            console.log('WebSocket connected');
+            document.getElementById('status-indicator').classList.add('connected');
+            reconnectAttempts = 0; // Reset reconnect counter on successful connection
+            
+            logEvent('connection', 'WebSocket connected');
+            
+            // Store and send client ID
+            myClientId = getClientId();
+            if (myClientId) {
+                socket.send(JSON.stringify({
+                    client_id: myClientId
+                }));
+            }
+            
+            // Set flag and signal that app is ready
+            window.wsConnected = true;
+            signalAppReady();
+        };
+        
+        socket.onmessage = function(event) {
+            try {
+                const data = JSON.parse(event.data);
+                console.log('WebSocket message received:', data);
+                
+                // Handle user count updates
+                if (data.event === 'user_count' && data.connected_users !== undefined) {
+                    connectedUsers = data.connected_users;
+                    updateUserCount(connectedUsers);
+                    logEvent('user_count', `Users online: ${connectedUsers}`);
+                    return;
+                }
+                
+                // Initialize user count from init message
+                if (data.event === 'init' && data.connected_users !== undefined) {
+                    connectedUsers = data.connected_users;
+                    updateUserCount(connectedUsers);
+                }
+                
+                // Handle debug info
+                if (data.event === 'debug_info') {
+                    console.log('Debug info:', data);
+                    return;
+                }
+                
+                // Handle real-time edit updates
+                if (data.event === 'edit_update' && data.todo_id && data.content) {
+                    // Log edit update but only if from someone else
+                    if (data.source_id && data.source_id !== myClientId) {
+                        logEvent('edit_update', `Real-time edit on todo #${data.todo_id}: "${data.content.substring(0, 20)}${data.content.length > 20 ? '...' : ''}"`);
+                    }
+                    
+                    // Update the content in view mode
+                    const contentElement = document.getElementById(`todo_content_${data.todo_id}`);
+                    if (contentElement) {
+                        contentElement.textContent = data.content;
+                    }
+                    
+                    // Show editing indicator
+                    if (data.source_id) {
+                        updateEditingIndicator(data.todo_id, data.source_id);
+                    }
+                    
+                    // Check if this update is from another user (not the current user typing)
+                    const inputElement = document.getElementById(`todo_edit_${data.todo_id}`);
+                    if (inputElement && data.source_id !== myClientId) {
+                        // Only if we're not the one currently typing
+                        const isActive = inputElement === document.activeElement;
+                        
+                        if (isActive) {
+                            // If we're actively editing, we need to be smart about cursor position
+                            const oldValue = inputElement.value;
+                            const newValue = data.content;
+                            const cursorPos = inputElement.selectionStart;
+                            
+                            // Determine what changed from old to new value
+                            let commonPrefixLength = 0;
+                            const minLength = Math.min(oldValue.length, newValue.length);
+                            
+                            // Find common prefix
+                            for (let i = 0; i < minLength; i++) {
+                                if (oldValue[i] !== newValue[i]) break;
+                                commonPrefixLength++;
+                            }
+                            
+                            // Find common suffix
+                            let commonSuffixLength = 0;
+                            for (let i = 0; i < minLength - commonPrefixLength; i++) {
+                                if (oldValue[oldValue.length - 1 - i] !== newValue[newValue.length - 1 - i]) break;
+                                commonSuffixLength++;
+                            }
+                            
+                            // Update the value
+                            inputElement.value = newValue;
+                            
+                            // Adjust cursor position based on where the edit happened
+                            if (cursorPos <= commonPrefixLength) {
+                                // Cursor is before the change - keep it where it is
+                                inputElement.selectionStart = cursorPos;
+                                inputElement.selectionEnd = cursorPos;
+                            } else if (cursorPos >= oldValue.length - commonSuffixLength) {
+                                // Cursor is after the change - adjust based on length difference
+                                const lengthDiff = newValue.length - oldValue.length;
+                                inputElement.selectionStart = cursorPos + lengthDiff;
+                                inputElement.selectionEnd = cursorPos + lengthDiff;
+                            } else {
+                                // Cursor is in the changed area - move to end of the changed section
+                                inputElement.selectionStart = commonPrefixLength + (newValue.length - oldValue.length - commonSuffixLength);
+                                inputElement.selectionEnd = inputElement.selectionStart;
+                            }
+                        } else {
+                            // If we're not actively editing, just update the value
+                            inputElement.value = data.content;
+                        }
+                    }
+                    
+                    return;
+                }
+                
+                // Handle completed edit saves
+                if (data.event === 'edit_saved' && data.todo_id) {
+                    logEvent('edit_saved', `Edit saved for todo #${data.todo_id}`);
+                    return;
+                }
+                
+                if (data.event === 'add' && data.todo_id) {
+                    logEvent('add', `New todo added with ID #${data.todo_id}`);
+                    
+                    // Always load the todo from the server
+                    fetch(`/todo-read/${data.todo_id}`)
+                        .then(response => response.text())
+                        .then(html => {
+                            // Check if this todo already exists in the DOM
+                            if (document.getElementById(`todo_${data.todo_id}`)) {
+                                console.log(`Todo ${data.todo_id} already exists, not adding duplicate`);
+                                return;
+                            }
+                            
+                            const todoCards = document.getElementById('todo-cards');
+                            if (todoCards) {
+                                // Create a temporary element to parse the HTML
+                                const temp = document.createElement('div');
+                                temp.innerHTML = html;
+                                
+                                // Add animation class
+                                const newTodo = temp.firstChild;
+                                if (newTodo) {
+                                    newTodo.classList.add('fade-in');
+                                    todoCards.insertAdjacentElement('afterbegin', newTodo);
+                                    
+                                    // Process the new element with HTMX
+                                    htmx.process(newTodo);
+                                }
+                            }
+                        });
+                } else if (data.event === 'update' && data.todo_id) {
+                    // Only log if from someone else
+                    if (data.source_id && data.source_id !== myClientId) {
+                        logEvent('update', `Todo #${data.todo_id} updated`);
+                    }
+                    
+                    // Refresh the updated todo
+                    const existingTodo = document.getElementById(`todo_${data.todo_id}`);
+                    if (existingTodo) {
+                        fetch(`/todo-read/${data.todo_id}`)
+                            .then(response => response.text())
+                            .then(html => {
+                                // Create a temporary element to parse the HTML
+                                const temp = document.createElement('div');
+                                temp.innerHTML = html;
+                                
+                                // Add animation class and replace existing todo
+                                const updatedTodo = temp.firstChild;
+                                if (updatedTodo) {
+                                    updatedTodo.classList.add('highlight');
+                                    existingTodo.replaceWith(updatedTodo);
+                                    
+                                    // Process the updated element with HTMX
+                                    htmx.process(updatedTodo);
+                                }
+                            });
+                    }
+                } else if (data.event === 'delete' && data.todo_id) {
+                    logEvent('delete', `Todo #${data.todo_id} deleted`);
+                    
+                    // Remove the deleted todo with animation
+                    const todoElement = document.getElementById(`todo_${data.todo_id}`);
+                    if (todoElement) {
+                        todoElement.style.opacity = '0';
+                        todoElement.style.transition = 'opacity 0.5s ease';
+                        setTimeout(() => {
+                            todoElement.remove();
+                        }, 500);
+                    }
+                } else if (data.event === 'init') {
+                    // Initial load of todos (if needed)
+                    logEvent('init', `Connected to server, loaded todo list`);
+                }
+            } catch (err) {
+                console.error('Error processing WebSocket message:', err);
+            }
+        };
+        
+        socket.onclose = function() {
+            console.log('WebSocket connection closed');
+            document.getElementById('status-indicator').classList.remove('connected');
+            document.getElementById('user-count').textContent = 'Disconnected';
+            
+            logEvent('connection', 'WebSocket disconnected');
+            
+            // Attempt to reconnect with exponential backoff
+            if (reconnectAttempts < maxReconnectAttempts) {
+                reconnectAttempts++;
+                const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 30000);
+                console.log(`Attempting to reconnect in ${delay/1000} seconds...`);
+                setTimeout(connectWebSocket, delay);
+            } else {
+                console.error('Maximum reconnection attempts reached.');
+            }
+        };
+        
+        socket.onerror = function(error) {
+            console.error('WebSocket error:', error);
+            document.getElementById('status-indicator').classList.remove('connected');
+            document.getElementById('user-count').textContent = 'Error';
+            
+            logEvent('error', 'WebSocket error occurred');
+        };
+    }
+    
+    // Initial connection
+    connectWebSocket();
+    
+    // Clean up on page unload
+    window.addEventListener('beforeunload', () => {
+        if (socket) {
+            socket.close();
+        }
+    });
+    
+    // Set up HTMX error handling
+    document.addEventListener('htmx:beforeSwap', function(event) {
+        if (event.detail.xhr && event.detail.xhr.status === 404) {
+            event.detail.shouldSwap = false;
+        }
+    });
+</script>
+</body>
+</html>
+

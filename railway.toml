@@ -1,0 +1,8 @@
+[build]
+builder = "dockerfile"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+startCommand = "./target/release/example-todo-app-rust-htmx"
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 10 
