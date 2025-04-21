@@ -1,9 +1,9 @@
-# Example TODO app with Rust and htmx
+# TODO
 
-A simple example TODO app build using:
+Realtime collaboration
 
-- [htmx](https://htmx.org/) for dynamic HTML updates
 - [Rust](https://www.rust-lang.org/) for backend development
+- [htmx](https://htmx.org/) for dynamic HTML updates
 - [WebSockets](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API) for real-time collaborative editing
 - [SQLx](https://github.com/launchbadge/sqlx) and [SQLite](https://sqlite.org/) for data persistence
 - [Rocket](https://rocket.rs/) web framework using handlebars templates
