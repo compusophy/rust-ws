@@ -1,18 +1,17 @@
 {
   "accountAssociation": {
     "header": "eyJmaWQiOjM1MDkxMSwidHlwZSI6ImN1c3RvZHkiLCJrZXkiOiIweDJGREVmM0Y0NzBlQ2QyQmM5YTk3NzU2OEM0M0FEMzg2MGMxNjExRDgifQ",
-    "payload": "eyJkb21haW4iOiJodG14LXJ1c3QtZ2VtaW5pLXByb2R1Y3Rpb24udXAucmFpbHdheS5hcHAifQ",
-    "signature": "MHg5MWExMjMwNDA4NjkwZDcwZjY3Mzc4NDQ2MjA5YzIzNDhkOTFhMzE0M2QwNTRiODQ3NzQwN2UxMWFiYWMwNTQ1MWI3Nzk0NTZhNzQyYjU4NWNkMzkzN2JjYWZlODQ4ZTQ1NGE3OTcxODljOGU5MzI3MGI1MTJkYzIwZjg3YmI4NjFi"
+    "payload": "eyJkb21haW4iOiJydXN0LXdzLXByb2R1Y3Rpb24udXAucmFpbHdheS5hcHAifQ",
+    "signature": "MHhjZTRlYTU2Y2ZlYTZjMDNlMmQ4ZDMyMTIzMGMwMDYyMDFlOTRhYTVjNmIzNTBlMzU1MmRiYWIxYjQ5NWQ2MTE5NWNhZmM0YzIwNzJjNjc2OWI0YzZlYmYyNjY4MWYwNTUyMzViNzEwODU3MzE1NDRkNWE5ZTlhN2Y5Yjg4YzkxODFi"
   },
   "frame": {
     "version": "1",
     "name": "TODO",
     "iconUrl": "https://cqs.gg/icon.jpg",
-    "homeUrl": "https://htmx-rust-gemini-production.up.railway.app",
+    "homeUrl": "https://rust-ws-production.up.railway.app/",
     "imageUrl": "https://cqs.gg/icon.jpg",
     "buttonTitle": "launch",
     "splashImageUrl": "https://cqs.gg/icon.jpg",
-    "splashBackgroundColor": "#ffffff",
-    "webhookUrl": "https://api.neynar.com/f/app/d9cc7795-7504-4a3a-ac5e-d2440a05092a/event"
+    "splashBackgroundColor": "#ffffff"
   }
 }
