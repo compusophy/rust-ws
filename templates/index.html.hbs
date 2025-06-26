@@ -264,48 +264,7 @@
         }
     </style>
     
-    <!-- Farcaster Frame SDK -->
-    <script type="module">
-      // Import the SDK
-      import { sdk } from 'https://esm.sh/@farcaster/frame-sdk';
-      
-      // Function to initialize the SDK and hide splash screen
-      async function initFarcaster() {
-        try {
-          console.log("Farcaster: Initializing SDK");
-          
-          // Function to hide the splash screen
-          const hideSplashScreen = async () => {
-            try {
-              await sdk.actions.ready();
-              console.log("Farcaster: Splash screen dismissed");
-            } catch (err) {
-              console.error("Farcaster: Error dismissing splash screen:", err);
-            }
-          };
-          
-          // Listen for the app-ready event from the WebSocket
-          document.addEventListener('app-ready', hideSplashScreen);
-          
-          // Set a timeout as fallback in case WebSocket doesn't connect
-          setTimeout(async () => {
-            if (!window.wsConnected) {
-              console.log("Farcaster: Timeout reached, showing app anyway");
-              hideSplashScreen();
-            }
-          }, 3000);
-        } catch (err) {
-          console.error("Farcaster: SDK initialization error:", err);
-        }
-      }
-      
-      // Wait for DOM to be fully loaded
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initFarcaster);
-      } else {
-        initFarcaster();
-      }
-    </script>
+
 </head>
 <body>
 <!-- Add the log button in its own container at the top level of the body -->
@@ -429,14 +388,8 @@
     let editDebounceTimers = {};
     // Track our client ID for comparison
     let myClientId = null;
-    // Flag to indicate WebSocket connection status - make it global for Farcaster SDK access
+    // Flag to indicate WebSocket connection status
     window.wsConnected = false;
-    
-    // Signal Farcaster SDK that the app is ready
-    function signalAppReady() {
-        // Dispatch a custom event that the Farcaster SDK can listen for
-        document.dispatchEvent(new CustomEvent('app-ready'));
-    }
     
     // Handle form submission manually
     document.getElementById('addTodoForm').addEventListener('submit', function(event) {
@@ -651,9 +604,8 @@
                 }));
             }
             
-            // Set flag and signal that app is ready
+            // Set flag
             window.wsConnected = true;
-            signalAppReady();
         };
         
         socket.onmessage = function(event) {
@@ -882,6 +834,30 @@
             event.detail.shouldSwap = false;
         }
     });
+</script>
+
+<!-- Farcaster Frame SDK -->
+<script type="module">
+    // Import the SDK
+    import { sdk } from 'https://esm.sh/@farcaster/frame-sdk';
+    
+    // Function to initialize the SDK and hide splash screen
+    async function initFarcaster() {
+        try {
+            console.log("Farcaster: Initializing SDK");
+            await sdk.actions.ready();
+            console.log("Farcaster: Splash screen dismissed");
+        } catch (err) {
+            console.error("Farcaster: SDK initialization error:", err);
+        }
+    }
+    
+    // Wait for DOM to be fully loaded
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initFarcaster);
+    } else {
+        initFarcaster();
+    }
 </script>
 </body>
 </html>
