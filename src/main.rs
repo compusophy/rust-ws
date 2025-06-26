@@ -65,20 +65,6 @@ impl ClientSessions {
         sessions.len()
     }
     
-    // Get the current count
-    fn count(&self) -> usize {
-        let sessions = self.0.lock().unwrap();
-        sessions.len()
-    }
-    
-    // Clear all sessions - for debugging purposes
-    fn debug_clear(&self) -> usize {
-        let mut sessions = self.0.lock().unwrap();
-        println!("DEBUG: Clearing all {} sessions", sessions.len());
-        sessions.clear();
-        0
-    }
-    
     // Debug print all sessions
     fn debug_print(&self) {
         let sessions = self.0.lock().unwrap();
@@ -114,7 +100,7 @@ impl Fairing for FrameHeaders {
 }
 
 #[rocket::main]
-async fn main() -> Result<(), rocket::Error> {
+async fn main() -> Result<(), Box<rocket::Error>> {
     maybe_create_database().await.expect("Failed to create DB");
 
     let sessions = ClientSessions::default();
@@ -143,7 +129,7 @@ async fn main() -> Result<(), rocket::Error> {
 }
 
 // Get or create a unique client ID
-fn get_client_id(cookies: &CookieJar<'_>, sessions: &State<ClientSessions>) -> String {
+fn get_client_id(cookies: &CookieJar<'_>, _sessions: &State<ClientSessions>) -> String {
     // Check if client already has an ID
     if let Some(cookie) = cookies.get("client_id") {
         return cookie.value().to_string();
@@ -308,7 +294,7 @@ fn todo_websocket<'r>(ws: WebSocket, queue: &'r State<Sender<TodoUpdate>>, sessi
                                                     .unwrap_or_else(|| ws_client_id.clone());
                                                 
                                                 // Actually save the edit to the database
-                                                if let Ok(_) = update_todo(todo_id, &content.to_string()).await {
+                                                if (update_todo(todo_id, &content.to_string()).await).is_ok() {
                                                     println!("Saved edit for todo {}: {}", todo_id, content);
                                                     
                                                     // Send confirmation back to client
@@ -468,7 +454,7 @@ async fn delete_todo_endpoint(cookies: &CookieJar<'_>, sessions: &State<ClientSe
     let client_id = get_client_id(cookies, sessions);
     
     // Delete the todo
-    if let Err(_) = delete_todo(id).await {
+    if (delete_todo(id).await).is_err() {
         return Status::InternalServerError;
     }
     

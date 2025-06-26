@@ -68,51 +68,6 @@ pub async fn update_todo(id: i64, title: &String) -> Result<(), DbError> {
     Ok(())
 }
 
-pub async fn toggle_todo_completed(id: i64) -> Result<(), DbError> {
-    // First check current state
-    let row: Option<(i8,)> = sqlx::query_as("SELECT completed FROM todos WHERE id=?")
-        .bind(id)
-        .fetch_optional(&conn().await?)
-        .await?;
-        
-    if let Some((completed,)) = row {
-        println!("🔍 DB: Todo {} current completion state in DB: {}", id, completed);
-        
-        // Now toggle the state
-        let new_state = if completed == 1 { 0 } else { 1 };
-        println!("🔄 DB: Toggling todo {} from {} to {}", id, completed, new_state);
-        
-        let result = sqlx::query("UPDATE todos SET completed = ? WHERE id = ?")
-            .bind(new_state)
-            .bind(id)
-            .execute(&conn().await?)
-            .await?;
-            
-        println!("✅ DB: Update result for todo {}: {} rows affected", id, result.rows_affected());
-        
-        // Verify the change
-        let updated: Option<(i8,)> = sqlx::query_as("SELECT completed FROM todos WHERE id=?")
-            .bind(id)
-            .fetch_optional(&conn().await?)
-            .await?;
-            
-        if let Some((updated_state,)) = updated {
-            println!("✓ DB: Todo {} verified new state: {}", id, updated_state);
-        }
-    } else {
-        println!("❌ DB: Todo {} not found", id);
-    }
-    
-    Ok(())
-}
-
-pub async fn clear_completed() -> Result<(), DbError> {
-    sqlx::query("DELETE FROM todos where completed = 1")
-        .execute(&conn().await?)
-        .await?;
-    Ok(())
-}
-
 pub async fn delete_todo(id: i64) -> Result<(), DbError> {
     sqlx::query("DELETE FROM todos WHERE id = ?")
         .bind(id)
